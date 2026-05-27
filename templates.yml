@@ -1,0 +1,20 @@
+- sensor:
+    - name: "EV Charger State"
+      icon: mdi:ev-station
+      state: >
+        {% set state_code = states('number.evcharger2_operating_state') | int(0) %}
+        {% if state_code == 300 %}
+          CHARGING
+        {% elif state_code == 200 %}
+          IDLE
+        {% elif state_code == 100 %}
+          WAITING
+        {% elif state_code == 101 %}
+          CAR DISCONNECTED
+        {% elif state_code == 201 %}
+          COMPLETE
+        {% elif state_code == 202 %}
+          OUTSIDE SCHEDULE
+        {% else %}
+          Unknown ({{ state_code }})
+        {% endif %}
