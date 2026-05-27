@@ -1,30 +1,41 @@
 alias: Solar EV adjust
-description: >-
-  Tracks solar dynamically, featuring a 9.8kW fixed battery draw profile, an
-  elevated base charge for full batteries, and a single unified solar tracking
-  formula across all periods.
+description: Tracks solar dynamically...
 triggers:
   - trigger: state
     entity_id:
-      - sensor.smoothed_solar_kw
-      - update.foxess_cloud_update
+      - sensor.foxess_solar_power
+      - sensor.foxess_house_load
   - trigger: time_pattern
-    minutes: /5
+    minutes: /1
+  - trigger: state
+    entity_id:
+      - sensor.foxess_data_freshness
+    attribute: last_update
 actions:
   - if:
       - condition: template
         value_template: "{{ manual_boost_active }}"
     then:
       - stop: "Bypassed: EV Override Boost is active."
+  - action: text.set_value
+    target:
+      entity_id: text.evcharger2_charge_mode
+    data:
+      value: >
+        {% set sunrise = as_timestamp(state_attr('sun.sun', 'next_rising')) |
+        timestamp_custom('%H:%M', true) %} {% set sunset =
+        as_timestamp(state_attr('sun.sun', 'next_setting')) |
+        timestamp_custom('%H:%M', true) %} {{ '{"m":2,"dt":1,"ss":"' ~ sunrise ~
+        '","se":"' ~ sunset ~ '"}' }}
   - choose:
       - conditions:
           - condition: template
             value_template: >-
-              {{ is_daylight and current_time < '11:00' and (battery_soc > 20 or
-              solar_kw > 0.5) }}
+              {{ is_daylight and (current_time < '11:00' or current_time >=
+              '14:00') }}
         sequence:
           - action: number.set_value
-            # target:
+            target:
               entity_id: number.evcharger2_charge_current
             data:
               value: "{{ solar_tracking_amps }}"
@@ -37,32 +48,23 @@ actions:
               entity_id: number.evcharger2_charge_current
             data:
               value: "{{ phase_2_amps }}"
-      - conditions:
-          - condition: template
-            value_template: "{{ is_daylight and current_time >= '14:00' }}"
-        sequence:
-          - action: number.set_value
-            target:
-              entity_id: number.evcharger2_charge_current
-            data:
-              value: "{{ solar_tracking_amps }}"
 mode: restart
 variables:
-  max_grid_allowance: 14.1 
+  max_grid_allowance: 14.1
   amps_per_kw_ratio: 0.5
   solar_allowance: 0
   phase_2_compensation_amps: 4
   battery_charge_kw: 9.8
-  solar_kw: "{{ states('sensor.smoothed_solar_kw') | float(0) - solar_allowance }}"
-  battery_soc: "{{ states('sensor.foxess_bat_soc') | int(0) }}"
+  solar_kw: "{{ states('sensor.foxess_solar_power') | float(0) - solar_allowance }}"
+  battery_soc: "{{ states('sensor.foxess_battery_soc') | int(0) }}"
   current_time: "{{ now().strftime('%H:%M') }}"
   is_daylight: "{{ states('sun.sun') == 'above_horizon' }}"
   manual_boost_active: "{{ is_state('input_boolean.ev_override_boost', 'on') }}"
   operating_state: "{{ states('number.evcharger2_operating_state') | int(0) }}"
   live_amps: "{{ states('number.evcharger2_charge_current') | float(0) }}"
   load_power_kw: >-
-    {% set raw_load = states('sensor.smoothed_home_load_power') | float(0) %} {%
-    if operating_state == 300 %}
+    {% set raw_load = states('sensor.foxess_house_load') | float(0) %} {% if
+    operating_state == 300 %}
       {{ raw_load - ((live_amps * 230) / 1000) }}
     {% else %}
       {{ raw_load }}
