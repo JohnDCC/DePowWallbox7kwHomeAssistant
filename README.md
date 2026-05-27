@@ -75,11 +75,8 @@ Helpers Needed:
 | :---: | :--- | :--- | :--- | :--- |
 | 🕒 | **Boost Time** | `input_number.ev_boost_duration` | Input Number | Sets the targeted hour duration limit for a manual charging boost session. |
 | 👁️ | **Charging Automation State** | `sensor.charging_automation_state` | Template Sensor | Legacy/Diagnostic tracking sensor used for system state visualization. |
-| 👁️ | **EV Boost Time Remaining** | `sensor.ev_boost_time_remaining` | Template Sensor | Calculates and displays the countdown time remaining for the active manual boost window. |
-| 🔢 | **EV Charge Retry Counter** | `counter.ev_charge_retry_counter` | Counter | Tracks initialization failures to trigger automatic charger reboots if connection states lock up. |
-| 📱 | **EV Charger** | `switch.ev_charger_smart_switch` | Template Switch | Virtual switch interface to manually command or verify the charger's hardware power state. |
+| ⚡ | **EV Charger Power** | `sensor.ev_charger_power` | Template Sensor | Monitors the real-time electrical power consumption (kW) specifically drawn by the EV. |
 | 🪫 | **EV Charger State** | `sensor.ev_charger_state` | Template Sensor | Translates raw internal charger codes into human-readable operational states (e.g., Idle, Charging). |
-| ⚙️ | **EV Original Schedule Storage** | `input_text.ev_original_schedule_storage` | Input Text | Storage register used to back up native hardware time schedules before override routines take over. |
 | ⭕ | **EV Override Boost** | `input_boolean.ev_override_boost` | Input Boolean | Master override toggle that forces solar-tracking to pause so manual or calendar charging can take command. |
 | 🎛️ | **EV UI Amperage Slider** | `input_number.ev_ui_amperage_slider` | Input Number | Virtual dashboard slider locked strictly to a safe 6A–32A window to prevent out-of-bounds current commands. |
 
@@ -89,10 +86,7 @@ Helpers Needed:
 | :--- | :--- | :--- | :---: | :---: | :---: |
 | **Boost Time** | `input_number.ev_boost_duration` | Number (Slider) | `0` / `5` | `0.5` | `h` |
 | **Charging Automation State** | `sensor.charging_automation_state` | Template Sensor | — | — | — |
-| **EV Boost Time Remaining** | `sensor.ev_boost_time_remaining` | Template Sensor | — | — | — |
-| **EV Charge Retry Counter** | `counter.ev_charge_retry_counter` | Counter | — | — | Initial: `0` |
-| **EV Charger** | `switch.ev_charger_smart_switch` | Template Switch | — | — | — |
+| **EV Charger Power** | `sensor.ev_charger_power` | Template Sensor | — | — | `kW` |
 | **EV Charger State** | `sensor.ev_charger_state` | Template Sensor | — | — | — |
-| **EV Original Schedule Storage** | `input_text.ev_original_schedule_storage` | Text | `0` / `255` | — | — |
 | **EV Override Boost** | `input_boolean.ev_override_boost` | Toggle (Boolean) | — | — | — |
 | **EV UI Amperage Slider** | `input_number.ev_ui_amperage_slider` | Number (Slider) | `6` / `32` | `1` | `A` |
