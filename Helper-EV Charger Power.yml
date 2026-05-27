@@ -1,0 +1,7 @@
+{% set state = states('number.evcharger2_operating_state') | int(0) %}
+{% set amps = states('number.evcharger2_charge_current') | float(0) %}
+{% if state == 300 %}
+  {{ ((amps * 230) / 1000) | round(2) }}
+{% else %}
+  0.0
+{% endif %}

@@ -1,0 +1,52 @@
+alias: EV Scheduled Boost Sync
+description: >-
+  Flips the boost override toggle on/off based on the calendar, and forces an
+  immediate shutdown mid-cycle if FoxESS battery SoC drops to or below 40%.
+triggers:
+  - trigger: state
+    entity_id: calendar.ev_boost_schedule
+    to: "on"
+    id: event_started
+  - trigger: state
+    entity_id: calendar.ev_boost_schedule
+    to: "off"
+    id: event_ended
+  - trigger: numeric_state
+    entity_id: sensor.foxess_bat_soc
+    below: 41
+    id: battery_dropped_low
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: event_started
+          - condition: numeric_state
+            entity_id: sensor.foxess_bat_soc
+            above: 40
+        sequence:
+          - action: number.set_value
+            target:
+              entity_id: number.evcharger2_charge_current
+            data:
+              value: 16
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.ev_override_boost
+      - conditions:
+          - or:
+              - condition: trigger
+                id: event_ended
+              - and:
+                  - condition: trigger
+                    id: battery_dropped_low
+                  - condition: state
+                    entity_id: input_boolean.ev_override_boost
+                    state: "on"
+                  - condition: state
+                    entity_id: calendar.ev_boost_schedule
+                    state: "on"
+        sequence:
+          - action: input_boolean.turn_off
+            target:
+              entity_id: input_boolean.ev_override_boost
+mode: restart

@@ -1,0 +1,44 @@
+alias: EV UI Slider True Two-Way Sync Bridge
+description: >-
+  Syncs the virtual dashboard slider and the actual EV hardware charger both
+  ways dynamically, enforcing a 6A minimum floor.
+triggers:
+  - trigger: state
+    entity_id: input_number.ev_ui_amperage_slider
+    id: slider_changed
+  - trigger: state
+    entity_id: number.evcharger2_charge_current
+    id: hardware_changed
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: slider_changed
+          - condition: template
+            value_template: >-
+              {{ (states('input_number.ev_ui_amperage_slider') | int(6)) !=
+              (states('number.evcharger2_charge_current') | int(0)) }}
+        sequence:
+          - action: number.set_value
+            target:
+              entity_id: number.evcharger2_charge_current
+            data:
+              value: >-
+                {% set ui_val = states('input_number.ev_ui_amperage_slider') |
+                int(6) %} {{ [6, ui_val] | max }}
+      - conditions:
+          - condition: trigger
+            id: hardware_changed
+          - condition: template
+            value_template: >-
+              {{ (states('input_number.ev_ui_amperage_slider') | int(6)) !=
+              (states('number.evcharger2_charge_current') | int(0)) }}
+        sequence:
+          - action: input_number.set_value
+            target:
+              entity_id: input_number.ev_ui_amperage_slider
+            data:
+              value: >-
+                {% set hw_val = states('number.evcharger2_charge_current') |
+                int(6) %} {{ [6, hw_val] | max }}
+mode: single

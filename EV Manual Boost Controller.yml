@@ -1,0 +1,60 @@
+alias: EV Manual Boost Controller
+description: >-
+  Manages the manual boost window schedule, dynamically tracking slider changes
+  mid-cycle, and hands control back to the solar automation immediately upon
+  turning off.
+triggers:
+  - trigger: state
+    entity_id: input_boolean.ev_override_boost
+    to: "on"
+    id: boost_activated
+  - trigger: state
+    entity_id: input_boolean.ev_override_boost
+    to: "off"
+    id: boost_deactivated
+actions:
+  - choose:
+      - conditions:
+          - condition: trigger
+            id: boost_activated
+        sequence:
+          - action: text.set_value
+            target:
+              entity_id: text.evcharger2_charge_mode
+            data:
+              value: "{\"m\":2,\"dt\":1}"
+          # Loop checks every minute until elapsed time matches the active slider value
+          - repeat:
+              while:
+                - condition: state
+                  entity_id: input_boolean.ev_override_boost
+                  state: "on"
+                - condition: template
+                  value_template: >-
+                    {% set last_triggered = state_attr('automation.ev_manual_boost_controller', 'last_triggered') %}
+                    {% if last_triggered is not none %}
+                      {{ (now() - last_triggered).total_seconds() < (states('input_number.ev_boost_duration') | float(0) * 3600) }}
+                    {% else %}
+                      false
+                    {% endif %}
+              sequence:
+                - delay: "00:01:00"
+          # Turn off boost if the loop finishes while the toggle is still on
+          - if:
+              - condition: state
+                entity_id: input_boolean.ev_override_boost
+                state: "on"
+            then:
+              - action: input_boolean.turn_off
+                target:
+                  entity_id: input_boolean.ev_override_boost
+      - conditions:
+          - condition: trigger
+            id: boost_deactivated
+        sequence:
+          - action: automation.trigger
+            target:
+              entity_id: automation.solar_ev_adjust
+            data:
+              skip_condition: false
+mode: single

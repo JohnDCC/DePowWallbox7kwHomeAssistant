@@ -1,0 +1,7 @@
+{% if is_state('input_boolean.ev_override_boost', 'on') %}
+  Override Active
+{% elif is_state('sun.sun', 'below_horizon') %}
+  Outside Daylight Hours
+{% else %}
+  Active
+{% endif %}

@@ -1,0 +1,203 @@
+type: grid
+cards:
+  - type: heading
+    heading: Car Charger
+    heading_style: title
+    icon: mdi:ev-plug-type2
+  - type: tile
+    grid_options:
+      rows: 1
+      columns: full
+    entity: sensor.ev_charger_state
+    name: Charger Status
+    icon: mdi:ev-station
+    color: accent
+    show_entity_picture: true
+    hide_state: false
+    state_content: state
+    vertical: false
+    icon_tap_action:
+      action: none
+    features_position: bottom
+  - type: tile
+    grid_options:
+      columns: full
+      rows: 1
+    entity: sensor.charging_automation_state
+    name: Charging Automation
+    icon: mdi:solar-panel
+    color: accent
+    vertical: false
+    features_position: bottom
+  - type: tile
+    grid_options:
+      columns: full
+    entity: input_number.ev_ui_amperage_slider
+    name: Target Amps
+    icon: mdi:lightning-bolt
+    show_entity_picture: false
+    hide_state: false
+    state_content: state
+    vertical: false
+    features:
+      - type: numeric-input
+        style: slider
+    features_position: bottom
+  - type: heading
+    icon: mdi:battery-plus
+    heading_style: title
+    heading: Boost
+  - type: tile
+    grid_options:
+      columns: full
+    entity: input_boolean.ev_override_boost
+    name: Boost Mode
+    icon: mdi:flash
+    color: orange
+    vertical: false
+    tap_action:
+      action: toggle
+    hold_action:
+      action: navigate
+      navigation_path: "#ev-popup-controls"
+    features_position: bottom
+  - type: tile
+    grid_options:
+      columns: full
+    visibility:
+      - condition: state
+        entity: input_boolean.ev_override_boost
+        state: "on"
+    entity: input_number.ev_boost_duration
+    vertical: false
+    features:
+      - style: slider
+        type: numeric-input
+    features_position: inline
+  - type: tile
+    grid_options:
+      columns: full
+    entity: sensor.ev_boost_time_remaining
+    name: Time Remaining
+    icon: mdi:timer-sand
+    vertical: false
+    features_position: bottom
+    visibility:
+      - condition: state
+        entity: input_boolean.ev_override_boost
+        state: "on"
+  - type: grid
+    cards:
+      - show_name: true
+        show_icon: false
+        type: button
+        name: 6A
+        icon: mdi:amperage
+        entity: number.evcharger2_charge_current
+        tap_action:
+          action: perform-action
+          perform_action: number.set_value
+          target:
+            entity_id: number.evcharger2_charge_current
+          data:
+            value: 6
+      - show_name: true
+        show_icon: false
+        type: button
+        name: 8A
+        icon: mdi:amperage
+        entity: number.evcharger2_charge_current
+        tap_action:
+          action: perform-action
+          perform_action: number.set_value
+          target:
+            entity_id: number.evcharger2_charge_current
+          data:
+            value: 8
+      - show_name: true
+        show_icon: false
+        type: button
+        name: 12A
+        icon: mdi:amperage
+        entity: number.evcharger2_charge_current
+        tap_action:
+          action: perform-action
+          perform_action: number.set_value
+          target:
+            entity_id: number.evcharger2_charge_current
+          data:
+            value: 12
+      - show_name: true
+        show_icon: false
+        type: button
+        name: 16A
+        icon: mdi:amperage
+        entity: number.evcharger2_charge_current
+        tap_action:
+          action: perform-action
+          perform_action: number.set_value
+          target:
+            entity_id: number.evcharger2_charge_current
+          data:
+            value: 16
+      - show_name: true
+        show_icon: false
+        type: button
+        name: 18A
+        icon: mdi:amperage
+        entity: number.evcharger2_charge_current
+        tap_action:
+          action: perform-action
+          perform_action: number.set_value
+          target:
+            entity_id: number.evcharger2_charge_current
+          data:
+            value: 18
+      - show_name: true
+        show_icon: false
+        type: button
+        name: 24A
+        icon: mdi:amperage
+        entity: number.evcharger2_charge_current
+        tap_action:
+          action: perform-action
+          perform_action: number.set_value
+          target:
+            entity_id: number.evcharger2_charge_current
+          data:
+            value: 24
+      - show_name: true
+        show_icon: false
+        type: button
+        name: 28A
+        icon: mdi:amperage
+        entity: number.evcharger2_charge_current
+        tap_action:
+          action: perform-action
+          perform_action: number.set_value
+          target:
+            entity_id: number.evcharger2_charge_current
+          data:
+            value: 28
+      - show_name: true
+        show_icon: false
+        type: button
+        name: 32A
+        icon: mdi:amperage
+        entity: number.evcharger2_charge_current
+        tap_action:
+          action: perform-action
+          perform_action: number.set_value
+          target:
+            entity_id: number.evcharger2_charge_current
+          data:
+            value: 32
+        show_state: false
+    square: false
+    columns: 4
+    grid_options:
+      columns: full
+    visibility:
+      - condition: state
+        entity: input_boolean.ev_override_boost
+        state: "on"

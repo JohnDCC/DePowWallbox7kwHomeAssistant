@@ -1,0 +1,15 @@
+{% if is_state('input_boolean.ev_override_boost', 'on') %}
+  {% set start_time = states.input_boolean.ev_override_boost.last_changed %}
+  {% set duration = states('input_number.ev_boost_duration') | float(0) %}
+  {% set end_time = start_time + timedelta(hours=duration) %}
+  {% set remaining = (end_time - now()).total_seconds() %}
+  {% if remaining > 0 %}
+    {% set hours = (remaining // 3600) | int %}
+    {% set minutes = ((remaining % 3600) // 60) | int %}
+    {{ '%02d:%02d' | format(hours, minutes) }}
+  {% else %}
+    00:00
+  {% endif %}
+{% else %}
+  00:00
+{% endif %}
