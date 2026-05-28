@@ -1,22 +1,54 @@
 alias: Solar EV adjust
 description: Tracks solar dynamically...
 triggers:
-  - trigger: state
-    entity_id:
-      - sensor.foxess_solar_power
-      - sensor.foxess_house_load
   - trigger: time_pattern
-    minutes: /1
-  - trigger: state
-    entity_id:
-      - sensor.foxess_data_freshness
-    attribute: last_update
+    minutes: /3
 actions:
   - if:
       - condition: template
-        value_template: "{{ manual_boost_active }}"
+        value_template: "{{ is_state('input_boolean.ev_override_boost', 'on') }}"
     then:
       - stop: "Bypassed: EV Override Boost is active."
+  - action: pyscript.check_inverter_charge_limit
+  - delay: "00:00:02"
+  - variables:
+      max_grid_allowance: 14.1
+      amps_per_kw_ratio: 0.5
+      solar_allowance: 0
+      phase_2_compensation_amps: 4
+      battery_charge_kw: >-
+        {{ (states('sensor.inverter_requested_charge_power') | float(0) / 1000)
+        | round(2) }}
+      solar_kw: "{{ states('sensor.smoothed_solar_kw') | float(0) - solar_allowance }}"
+      battery_soc: "{{ states('sensor.foxess_battery_soc') | int(0) }}"
+      current_time: "{{ now().strftime('%H:%M') }}"
+      is_daylight: "{{ states('sun.sun') == 'above_horizon' }}"
+      operating_state: "{{ states('number.evcharger2_operating_state') | int(0) }}"
+      live_amps: "{{ states('number.evcharger2_charge_current') | float(0) }}"
+      load_power_kw: >-
+        {% set raw_load = states('sensor.foxess_house_load') | float(0) %}  {%
+        if operating_state == 300 %}
+          {{ raw_load - ((live_amps * 230) / 1000) }}
+        {% else %}
+          {{ raw_load }}
+        {% endif %}
+      default_amps: >-
+        {{ 8 + (2 if battery_soc > 35 else 0) + (2 if battery_soc > 90 else 0)
+        }}
+      household_buffer: "{{ load_power_kw + 0.25 }}"
+      solar_tracking_calculated: "{{ default_amps + ((solar_kw / amps_per_kw_ratio) | int) }}"
+      solar_tracking_amps: >-
+        {% set bounded = [6, solar_tracking_calculated] | max %}  {{ [32,
+        bounded] | min | string }}
+      phase_2_raw_kw: >-
+        {{ solar_kw + max_grid_allowance - battery_charge_kw - household_buffer
+        }}
+      phase_2_calculated: >-
+        {{ (((phase_2_raw_kw * 1000) / 230) | round(0) | int) +
+        phase_2_compensation_amps }}
+      phase_2_amps: >-
+        {% set bounded = [6, phase_2_calculated] | max %}  {{ [32, bounded] |
+        min | string }}
   - action: text.set_value
     target:
       entity_id: text.evcharger2_charge_mode
@@ -49,36 +81,3 @@ actions:
             data:
               value: "{{ phase_2_amps }}"
 mode: restart
-variables:
-  max_grid_allowance: 14.1
-  amps_per_kw_ratio: 0.5
-  solar_allowance: 0
-  phase_2_compensation_amps: 4
-  battery_charge_kw: 9.8
-  solar_kw: "{{ states('sensor.foxess_solar_power') | float(0) - solar_allowance }}"
-  battery_soc: "{{ states('sensor.foxess_battery_soc') | int(0) }}"
-  current_time: "{{ now().strftime('%H:%M') }}"
-  is_daylight: "{{ states('sun.sun') == 'above_horizon' }}"
-  manual_boost_active: "{{ is_state('input_boolean.ev_override_boost', 'on') }}"
-  operating_state: "{{ states('number.evcharger2_operating_state') | int(0) }}"
-  live_amps: "{{ states('number.evcharger2_charge_current') | float(0) }}"
-  load_power_kw: >-
-    {% set raw_load = states('sensor.foxess_house_load') | float(0) %} {% if
-    operating_state == 300 %}
-      {{ raw_load - ((live_amps * 230) / 1000) }}
-    {% else %}
-      {{ raw_load }}
-    {% endif %}
-  default_amps: "{{ 8 + (2 if battery_soc > 35 else 0) + (2 if battery_soc > 90 else 0) }}"
-  household_buffer: "{{ load_power_kw + 0.25 }}"
-  solar_tracking_calculated: "{{ default_amps + ((solar_kw / amps_per_kw_ratio) | int) }}"
-  solar_tracking_amps: >-
-    {% set bounded = [6, solar_tracking_calculated] | max %} {{ [32, bounded] |
-    min | string }}
-  phase_2_raw_kw: "{{ solar_kw + max_grid_allowance - battery_charge_kw - household_buffer }}"
-  phase_2_calculated: >-
-    {{ (((phase_2_raw_kw * 1000) / 230) | round(0) | int) +
-    phase_2_compensation_amps }}
-  phase_2_amps: >-
-    {% set bounded = [6, phase_2_calculated] | max %} {{ [32, bounded] | min |
-    string }}
