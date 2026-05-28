@@ -153,8 +153,10 @@ Before enabling the automations, replace all example entity IDs with your own.
 | Example entity | Replace with |
 | --- | --- |
 | `sensor.smoothed_solar_kw` | Your solar production sensor |
-| `sensor.foxess_bat_soc` | Your battery state-of-charge sensor |
-| `number.evcharger2_operating_state` | Your charger operating state entity |
+| `sensor.foxess_house_load` | Your load sensor |
+| `sensor.inverter_requested_charge_power` | Your battery charge demand sensor, or otherwise replace this with static number that represents your battery's max charging kw|
+| `sensor.foxess_battery_soc` | Your battery state-of-charge sensor |
+| `number.evcharger2_operating_state` | Your charger operating state entity, what indicates that it is charging |
 | `number.evcharger2_charge_current` | Your charger charge current entity |
 | `input_boolean.ev_override_boost` | Your chosen override helper if renamed |
 | `input_number.ev_boost_duration` | Your chosen boost-time helper if renamed |
